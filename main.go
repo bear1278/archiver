@@ -6,7 +6,7 @@ type SimpleArchiver struct {
 	buffer     []byte
 }
 
-func NewSimpleArchiver(inputPath string) *SimpleArchiver {
+func NewArchiver(inputPath string) *SimpleArchiver {
 	buffer := make([]byte, 1024*8)
 	return &SimpleArchiver{inputPath: inputPath, buffer: buffer}
 }
