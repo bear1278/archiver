@@ -25,18 +25,50 @@ func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
 		return []byte{}
 	}
 	result := make([]byte, 0)
+	group := make([]byte, 0)
 	searchingByte := data[0]
 	count := 0
+	groupCount := 0
 	for _, current := range data {
 		if searchingByte == current {
 			count++
 		} else {
-			result = append(result, byte(count+'0'), searchingByte)
-			count = 1
-			searchingByte = current
+			if count < 4 {
+				if groupCount+count >= 127 {
+					result = append(result, sa.createControlByte(groupCount, false))
+					groupCount = 0
+					result = append(result, group...)
+					group = make([]byte, 0)
+				}
+				groupCount += count
+				group = append(group, searchingByte)
+				count = 1
+				searchingByte = current
+			} else {
+				if len(group) != 0 {
+					result = append(result, sa.createControlByte(groupCount, false))
+					groupCount = 0
+					result = append(result, group...)
+					group = make([]byte, 0)
+				}
+				result = append(result, sa.createControlByte(count, true), searchingByte)
+				count = 1
+				searchingByte = current
+			}
 		}
 	}
-	result = append(result, byte(count+'0'), searchingByte)
+	if len(group) != 0 {
+		if count < 4 {
+			groupCount += count
+			group = append(group, searchingByte)
+			count = 0
+		}
+		result = append(result, sa.createControlByte(groupCount, false))
+		result = append(result, group...)
+	}
+	if count != 0 {
+		result = append(result, sa.createControlByte(count, true), searchingByte)
+	}
 	return result
 }
 
@@ -53,5 +85,5 @@ func (sa *SimpleArchiver) createControlByte(count int, isCompressed bool) byte {
 
 func main() {
 	archiver := NewArchiver("test.txt")
-	fmt.Println(string(archiver.countRepeating([]byte("ABC"))))
+	fmt.Println(archiver.countRepeating([]byte("AAAAABCD")))
 }
