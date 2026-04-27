@@ -24,6 +24,37 @@ func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
 		return []byte{}
 	}
 	result := make([]byte, 0)
+	searchingByte := data[0]
+	count := 0
+	for _, current := range data {
+		if searchingByte == current {
+			count++
+		} else {
+			result = append(result, sa.createControlByte(count, true), searchingByte)
+			count = 1
+			searchingByte = current
+		}
+	}
+	result = append(result, sa.createControlByte(count, true), searchingByte)
+	return result
+}
+
+func (sa *SimpleArchiver) createControlByte(count int, isCompressed bool) byte {
+	if count > 127 {
+		count = 127
+	}
+	if isCompressed {
+		return byte(count + 128)
+	} else {
+		return byte(count)
+	}
+}
+
+func (sa *SimpleArchiver) compress(data []byte) []byte {
+	if len(data) == 0 {
+		return sa.compressEmpty(data)
+	}
+	result := make([]byte, 0)
 	countRun := func(data []byte, i int) int {
 		b := data[i]
 		count := 0
@@ -41,7 +72,7 @@ func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
 				result = append(result, sa.createControlByte(127, true), data[i])
 				run -= 127
 			}
-			result = append(result, sa.createControlByte(run, true), data[i])
+			result = append(result, sa.countRepeating(data[i:i+run])...)
 			i += run
 			continue
 		}
@@ -61,24 +92,6 @@ func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
 		result = append(result, data[start:start+length]...)
 	}
 	return result
-}
-
-func (sa *SimpleArchiver) createControlByte(count int, isCompressed bool) byte {
-	if count > 127 {
-		count = 127
-	}
-	if isCompressed {
-		return byte(count + 128)
-	} else {
-		return byte(count)
-	}
-}
-
-func (sa *SimpleArchiver) compress(data []byte) []byte {
-	if len(data) == 0 {
-		return sa.compressEmpty(data)
-	}
-	return sa.countRepeating(data)
 }
 
 func main() {
