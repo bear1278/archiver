@@ -40,6 +40,17 @@ func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
 	return result
 }
 
+func (sa *SimpleArchiver) createControlByte(count int, isCompressed bool) byte {
+	if count > 127 {
+		count = 127
+	}
+	if isCompressed {
+		return byte(count + 128)
+	} else {
+		return byte(count)
+	}
+}
+
 func main() {
 	archiver := NewArchiver("test.txt")
 	fmt.Println(string(archiver.countRepeating([]byte("ABC"))))
