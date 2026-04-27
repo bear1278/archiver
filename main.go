@@ -11,6 +11,13 @@ func NewArchiver(inputPath string) *SimpleArchiver {
 	return &SimpleArchiver{inputPath: inputPath, buffer: buffer}
 }
 
+func (sa *SimpleArchiver) compressEmpty(data []byte) []byte {
+	if len(data) == 0 {
+		return []byte{}
+	}
+	return data
+}
+
 func main() {
 
 }
