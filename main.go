@@ -87,9 +87,8 @@ func (sa *SimpleArchiver) decompress(data []byte) []byte {
 		length := int(control & 127)
 		if control&128 != 0 {
 			i++
-			value := data[i]
 			for k := 0; k < length; k++ {
-				result = append(result, value)
+				result = append(result, data[i])
 			}
 			i++
 		} else {
@@ -97,11 +96,14 @@ func (sa *SimpleArchiver) decompress(data []byte) []byte {
 			result = append(result, data[i:i+length]...)
 			i += length
 		}
-
 	}
 	return result
 }
 
 func main() {
 	archiver := NewArchiver("test.txt")
+	fmt.Println([]byte("AAAAABCD"))
+	data := archiver.compress([]byte("AAAAABCD"))
+	fmt.Println(data)
+	fmt.Println(archiver.decompress(data))
 }
