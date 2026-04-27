@@ -36,7 +36,7 @@ func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
 
 	for i := 0; i < len(data); {
 		run := countRun(data, i)
-		if run >= 4 {
+		if run >= 3 {
 			for run > 127 {
 				result = append(result, sa.createControlByte(127, true), data[i])
 				run -= 127
@@ -51,7 +51,7 @@ func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
 
 		for i < len(data) && length < 127 {
 			run = countRun(data, i)
-			if run >= 4 {
+			if run >= 3 {
 				break
 			}
 			i++
