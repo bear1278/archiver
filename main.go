@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type SimpleArchiver struct {
 	inputPath  string
 	outputPath string
@@ -18,6 +20,27 @@ func (sa *SimpleArchiver) compressEmpty(data []byte) []byte {
 	return data
 }
 
-func main() {
+func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
+	if len(data) == 0 {
+		return []byte{}
+	}
+	result := make([]byte, 0)
+	searchingByte := data[0]
+	count := 0
+	for _, current := range data {
+		if searchingByte == current {
+			count++
+		} else {
+			result = append(result, byte(count+'0'), searchingByte)
+			count = 1
+			searchingByte = current
+		}
+	}
+	result = append(result, byte(count+'0'), searchingByte)
+	return result
+}
 
+func main() {
+	archiver := NewArchiver("test.txt")
+	fmt.Println(string(archiver.countRepeating([]byte("ABC"))))
 }
