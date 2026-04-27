@@ -19,55 +19,46 @@ func (sa *SimpleArchiver) compressEmpty(data []byte) []byte {
 	}
 	return data
 }
-
 func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
 	if len(data) == 0 {
 		return []byte{}
 	}
 	result := make([]byte, 0)
-	group := make([]byte, 0)
-	searchingByte := data[0]
-	count := 0
-	groupCount := 0
-	for _, current := range data {
-		if searchingByte == current {
+	countRun := func(data []byte, i int) int {
+		b := data[i]
+		count := 0
+		for i < len(data) && data[i] == b {
 			count++
-		} else {
-			if count < 4 {
-				if groupCount+count >= 127 {
-					result = append(result, sa.createControlByte(groupCount, false))
-					groupCount = 0
-					result = append(result, group...)
-					group = make([]byte, 0)
-				}
-				groupCount += count
-				group = append(group, searchingByte)
-				count = 1
-				searchingByte = current
-			} else {
-				if len(group) != 0 {
-					result = append(result, sa.createControlByte(groupCount, false))
-					groupCount = 0
-					result = append(result, group...)
-					group = make([]byte, 0)
-				}
-				result = append(result, sa.createControlByte(count, true), searchingByte)
-				count = 1
-				searchingByte = current
+			i++
+		}
+		return count
+	}
+
+	for i := 0; i < len(data); {
+		run := countRun(data, i)
+		if run >= 4 {
+			for run > 127 {
+				result = append(result, sa.createControlByte(127, true), data[i])
+				run -= 127
 			}
+			result = append(result, sa.createControlByte(run, true), data[i])
+			i += run
+			continue
 		}
-	}
-	if len(group) != 0 {
-		if count < 4 {
-			groupCount += count
-			group = append(group, searchingByte)
-			count = 0
+
+		start := i
+		length := 0
+
+		for i < len(data) && length < 127 {
+			run = countRun(data, i)
+			if run >= 4 {
+				break
+			}
+			i++
+			length++
 		}
-		result = append(result, sa.createControlByte(groupCount, false))
-		result = append(result, group...)
-	}
-	if count != 0 {
-		result = append(result, sa.createControlByte(count, true), searchingByte)
+		result = append(result, sa.createControlByte(length, false))
+		result = append(result, data[start:start+length]...)
 	}
 	return result
 }
