@@ -19,24 +19,14 @@ func (sa *SimpleArchiver) compressEmpty(data []byte) []byte {
 	}
 	return data
 }
-func (sa *SimpleArchiver) countRepeating(data []byte) []byte {
-	if len(data) == 0 {
-		return []byte{}
-	}
-	result := make([]byte, 0)
-	searchingByte := data[0]
+func (sa *SimpleArchiver) countRepeating(data []byte, i int) int {
+	b := data[i]
 	count := 0
-	for _, current := range data {
-		if searchingByte == current {
-			count++
-		} else {
-			result = append(result, sa.createControlByte(count, true), searchingByte)
-			count = 1
-			searchingByte = current
-		}
+	for i < len(data) && data[i] == b && i < 127 {
+		count++
+		i++
 	}
-	result = append(result, sa.createControlByte(count, true), searchingByte)
-	return result
+	return count
 }
 
 func (sa *SimpleArchiver) createControlByte(count int, isCompressed bool) byte {
@@ -55,24 +45,15 @@ func (sa *SimpleArchiver) compress(data []byte) []byte {
 		return sa.compressEmpty(data)
 	}
 	result := make([]byte, 0)
-	countRun := func(data []byte, i int) int {
-		b := data[i]
-		count := 0
-		for i < len(data) && data[i] == b {
-			count++
-			i++
-		}
-		return count
-	}
 
 	for i := 0; i < len(data); {
-		run := countRun(data, i)
+		run := sa.countRepeating(data, i)
 		if run >= 3 {
 			for run > 127 {
 				result = append(result, sa.createControlByte(127, true), data[i])
 				run -= 127
 			}
-			result = append(result, sa.countRepeating(data[i:i+run])...)
+			result = append(result, sa.createControlByte(run, true), data[i])
 			i += run
 			continue
 		}
@@ -81,7 +62,7 @@ func (sa *SimpleArchiver) compress(data []byte) []byte {
 		length := 0
 
 		for i < len(data) && length < 127 {
-			run = countRun(data, i)
+			run = sa.countRepeating(data, i)
 			if run >= 3 {
 				break
 			}
@@ -104,10 +85,12 @@ func (sa *SimpleArchiver) decompress(data []byte) []byte {
 		control = data[i]
 		if control&128 != 0 {
 			i += 2
+			fmt.Println(control, "сжатая", int(control&127))
 		} else {
 			i += int(control&127) + 1
+			fmt.Println(control, "несжатая", int(control&127))
 		}
-		fmt.Println(control)
+
 	}
 	return nil
 }
