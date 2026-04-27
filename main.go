@@ -79,16 +79,22 @@ func (sa *SimpleArchiver) decompress(data []byte) []byte {
 	if len(data) == 0 {
 		return []byte{}
 	}
+	result := make([]byte, 0)
 	i := 0
 	var control byte
 	for i < len(data) {
 		control = data[i]
+		value := int(control & 127)
 		if control&128 != 0 {
-			i += 2
-			fmt.Println(control, "сжатая", int(control&127))
+			i++
+			for k := 0; k < value; k++ {
+				result = append(result, data[i])
+			}
+			i++
 		} else {
-			i += int(control&127) + 1
-			fmt.Println(control, "несжатая", int(control&127))
+			i++
+			result = append(result, data[i:i+value]...)
+			i += value
 		}
 
 	}
