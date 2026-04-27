@@ -98,7 +98,7 @@ func (sa *SimpleArchiver) decompress(data []byte) []byte {
 		}
 
 	}
-	return nil
+	return result
 }
 
 func main() {
