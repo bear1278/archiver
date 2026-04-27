@@ -84,17 +84,18 @@ func (sa *SimpleArchiver) decompress(data []byte) []byte {
 	var control byte
 	for i < len(data) {
 		control = data[i]
-		value := int(control & 127)
+		length := int(control & 127)
 		if control&128 != 0 {
 			i++
-			for k := 0; k < value; k++ {
-				result = append(result, data[i])
+			value := data[i]
+			for k := 0; k < length; k++ {
+				result = append(result, value)
 			}
 			i++
 		} else {
 			i++
-			result = append(result, data[i:i+value]...)
-			i += value
+			result = append(result, data[i:i+length]...)
+			i += length
 		}
 
 	}
