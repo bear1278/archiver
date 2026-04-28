@@ -37,6 +37,9 @@ func (m model) View() string {
 	if m.state == "menu" {
 		return m.viewMenu()
 	}
+	if m.state == "compress" || m.state == "decompress" {
+		return m.viewInput()
+	}
 	return ""
 }
 
@@ -51,6 +54,24 @@ func (m model) viewMenu() string {
 		builder.WriteString(fmt.Sprintf("%s %s \n", cursor, choice))
 	}
 	builder.WriteString("Используйте стрелки для навигации и enter для выбора\nНажмите q для выхода")
+	return builder.String()
+}
+
+func (m model) viewInput() string {
+	builder := strings.Builder{}
+	builder.WriteString("===== Архиватор =====\n\n")
+	builder.WriteString("Введите к файлу для ")
+	if m.state == "compress" {
+		builder.WriteString("сжатия:\n")
+	} else if m.state == "decompress" {
+		builder.WriteString("распаковки:\n")
+	}
+	builder.WriteString(m.inputPath)
+	builder.WriteString("_ \n")
+	if m.err != nil {
+		builder.WriteString(m.err.Error())
+	}
+	builder.WriteString("Enter для подтверждения, Esc для возврата в меню")
 	return builder.String()
 }
 
