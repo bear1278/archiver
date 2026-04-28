@@ -134,7 +134,6 @@ func (sa *SimpleArchiver) CompressFile(inputPath, outputPath string) error {
 		if readErr != nil && readErr != io.EOF {
 			return fmt.Errorf("Error reading input file: %v", readErr)
 		}
-		dataLen, err = reader.Read(sa.buffer)
 		compressedData := sa.compress(sa.buffer[:dataLen])
 		blockSize := uint16(len(compressedData))
 		err = writer.WriteByte(byte(blockSize >> 8))
