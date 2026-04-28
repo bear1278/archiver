@@ -3,11 +3,11 @@ package main
 import (
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
+	"path/filepath"
 	"strings"
 )
 
 type model struct {
-	archiver  *SimpleArchiver
 	cursor    int
 	choices   []string
 	state     string
@@ -72,7 +72,7 @@ func (m model) viewInput() string {
 	builder.WriteString(m.inputPath)
 	builder.WriteString("_ \n")
 	if m.err != nil {
-		builder.WriteString(m.err.Error())
+		builder.WriteString(m.err.Error() + "\n")
 	}
 	builder.WriteString("Enter для подтверждения, Esc для возврата в меню")
 	return builder.String()
@@ -120,6 +120,19 @@ func (m model) updateInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "enter":
 		if m.inputPath == "" {
 			return m, nil
+		}
+		archiver := NewArchiver(m.inputPath)
+		if m.state == "compress" {
+			m.err = archiver.CompressFile(m.inputPath, m.inputPath+".sarch")
+			if m.err == nil {
+				m.state = "menu"
+			}
+		}
+		if m.state == "decompress" {
+			m.err = archiver.DecompressFile(m.inputPath, filepath.Dir(m.inputPath))
+			if m.err == nil {
+				m.state = "menu"
+			}
 		}
 		return m, nil
 	case "backspace":
