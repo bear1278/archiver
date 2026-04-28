@@ -118,11 +118,12 @@ func (sa *SimpleArchiver) CompressFile(inputPath, outputPath string) error {
 	defer outputFile.Close()
 	writer := bufio.NewWriter(outputFile)
 	defer writer.Flush()
-	err = writer.WriteByte(byte(len(inputPath)))
+	inputFileName := filepath.Base(inputPath)
+	err = writer.WriteByte(byte(len(inputFileName)))
 	if err != nil {
 		return fmt.Errorf("Error writing input file: %v", err)
 	}
-	_, err = writer.Write([]byte(filepath.Base(inputPath)))
+	_, err = writer.Write([]byte(inputFileName))
 	if err != nil {
 		return fmt.Errorf("Error writing input file: %v", err)
 	}
