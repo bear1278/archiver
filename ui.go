@@ -6,7 +6,7 @@ type model struct {
 	archiver  *SimpleArchiver
 	cursor    int
 	choices   []string
-	stateMap  map[string]int
+	state     string
 	err       error
 	inputPath string
 }
