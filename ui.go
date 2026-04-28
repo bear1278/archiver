@@ -30,6 +30,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.state == "menu" {
 			return m.updateMenu(msg)
 		}
+		if m.state == "compress" || m.state == "decompress" {
+			return m.updateInput(msg)
+		}
 	}
 	return m, nil
 }
@@ -104,4 +107,31 @@ func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	return m, nil
+}
+
+func (m model) updateInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "ctrl+c":
+		return m, tea.Quit
+	case "esc":
+		m.err = nil
+		m.state = "menu"
+		return m, nil
+	case "enter":
+		if m.inputPath == "" {
+			return m, nil
+		}
+		return m, nil
+	case "backspace":
+		if len(m.inputPath) == 0 {
+			return m, nil
+		}
+		m.inputPath = m.inputPath[:len(m.inputPath)-1]
+		return m, nil
+	default:
+		if len(msg.String()) == 1 {
+			m.inputPath += msg.String()
+		}
+		return m, nil
+	}
 }
