@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"path/filepath"
+)
 
 type SimpleArchiver struct {
 	inputPath  string
@@ -98,6 +103,30 @@ func (sa *SimpleArchiver) decompress(data []byte) []byte {
 		}
 	}
 	return result
+}
+
+func (sa *SimpleArchiver) CompressFile(inputPath, outputPath string) error {
+	inputFile, err := os.Open(inputPath)
+	if err != nil {
+		return fmt.Errorf("Error opening input file: %v", err)
+	}
+	defer inputFile.Close()
+	outputFile, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("Error creating output file: %v", err)
+	}
+	defer outputFile.Close()
+	writer := bufio.NewWriter(outputFile)
+	defer writer.Flush()
+	err = writer.WriteByte(byte(len(inputPath)))
+	if err != nil {
+		return fmt.Errorf("Error writing input file: %v", err)
+	}
+	_, err = writer.Write([]byte(filepath.Base(inputPath)))
+	if err != nil {
+		return fmt.Errorf("Error writing input file: %v", err)
+	}
+	return nil
 }
 
 func main() {
