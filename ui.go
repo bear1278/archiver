@@ -25,6 +25,12 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		if m.state == "menu" {
+			return m.updateMenu(msg)
+		}
+	}
 	return m, nil
 }
 func (m model) View() string {
@@ -46,4 +52,35 @@ func (m model) viewMenu() string {
 	}
 	builder.WriteString("Используйте стрелки для навигации и enter для выбора\nНажмите q для выхода")
 	return builder.String()
+}
+
+func (m model) updateMenu(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "ctrl+c", "q":
+		return m, tea.Quit
+	case "up", "k":
+		if m.cursor > 0 {
+			m.cursor--
+		}
+		return m, nil
+	case "down", "j":
+		if m.cursor < len(m.choices)-1 {
+			m.cursor++
+		}
+		return m, nil
+	case "enter":
+		switch m.cursor {
+		case 0:
+			m.state = "compress"
+			return m, nil
+		case 1:
+			m.state = "decompress"
+			return m, nil
+		case 2:
+			return m, tea.Quit
+		}
+	default:
+		return m, nil
+	}
+	return m, nil
 }
