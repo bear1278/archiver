@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -127,13 +128,38 @@ func (sa *SimpleArchiver) CompressFile(inputPath, outputPath string) error {
 	if err != nil {
 		return fmt.Errorf("Error writing input file: %v", err)
 	}
+	reader := bufio.NewReader(inputFile)
+	for {
+		dataLen, readErr := reader.Read(sa.buffer)
+		if readErr != nil && readErr != io.EOF {
+			return fmt.Errorf("Error reading input file: %v", readErr)
+		}
+		dataLen, err = reader.Read(sa.buffer)
+		compressedData := sa.compress(sa.buffer[:dataLen])
+		blockSize := uint16(len(compressedData))
+		err = writer.WriteByte(byte(blockSize >> 8))
+		if err != nil {
+			return fmt.Errorf("Error writing block size: %v", err)
+		}
+		err = writer.WriteByte(byte(blockSize))
+		if err != nil {
+			return fmt.Errorf("Error writing block size: %v", err)
+		}
+		_, err = writer.Write(compressedData)
+		if err != nil {
+			return fmt.Errorf("Error writing compressed data: %v", err)
+		}
+		if readErr == io.EOF {
+			break
+		}
+	}
 	return nil
 }
 
 func main() {
 	archiver := NewArchiver("test.txt")
-	fmt.Println([]byte("AAAAABCD"))
-	data := archiver.compress([]byte("AAAAABCD"))
-	fmt.Println(data)
-	fmt.Println(archiver.decompress(data))
+	err := archiver.CompressFile("test.txt", "test1.sarch")
+	if err != nil {
+		fmt.Println(err)
+	}
 }
