@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type SimpleArchiver struct {
@@ -155,10 +156,40 @@ func (sa *SimpleArchiver) CompressFile(inputPath, outputPath string) error {
 	return nil
 }
 
+func (sa *SimpleArchiver) DecompressFile(inputPath, outputDir string) error {
+	archive, err := os.Open(inputPath)
+	if err != nil {
+		return fmt.Errorf("Error opening input file: %v", err)
+	}
+	defer archive.Close()
+	reader := bufio.NewReader(archive)
+	length, err := reader.ReadByte()
+	if err != nil {
+		return fmt.Errorf("Error reading input file: %v", err)
+	}
+	builder := strings.Builder{}
+	for i := 0; i < int(length); i++ {
+		char, err := reader.ReadByte()
+		if err != nil {
+			return fmt.Errorf("Error reading input file: %v", err)
+		}
+		builder.WriteByte(char)
+	}
+	outputFileName := builder.String()
+	outputFile, err := os.Create(filepath.Join(outputDir, outputFileName))
+	if err != nil {
+		return fmt.Errorf("Error creating output file: %v", err)
+	}
+	defer outputFile.Close()
+	return nil
+}
+
 func main() {
 	archiver := NewArchiver("test.txt")
 	err := archiver.CompressFile("test.txt", "test1.sarch")
 	if err != nil {
 		fmt.Println(err)
 	}
+	os.Remove("test.txt")
+	err = archiver.DecompressFile("test1.sarch", "")
 }
