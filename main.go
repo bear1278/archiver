@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
 	"io"
 	"os"
 	"path/filepath"
@@ -204,10 +205,5 @@ func (sa *SimpleArchiver) DecompressFile(inputPath, outputDir string) error {
 }
 
 func main() {
-	archiver := NewArchiver("test.txt")
-	err := archiver.CompressFile("test.txt", "test1.sarch")
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = archiver.DecompressFile("test1.sarch", "./res")
+	tea.NewProgram(initialModel()).Run()
 }
